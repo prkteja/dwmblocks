@@ -26,28 +26,39 @@ else
 fi  
 
 if [ "$status" == "on" ];then
-	symbol="$symbol󱐋 "
+	symbol="$symbol󱐋"
+	notify-send.sh --close=98
+else
+	notify-send.sh --close=99
 fi
 
 if [ -f "/sys/class/power_supply/BAT0/capacity" ];then
 	charge=$(cat /sys/class/power_supply/BAT0/capacity)
-	if [ $charge -lt 6 ];then
+	if [ $charge -lt 10 ];then
 		if [ "$status" == "off" ];then
 			systemctl hibernate
 		fi
 	fi
 	if [ $charge -lt 20 ];then
 		if [ "$status" == "off" ];then
-			notify-send -u critical "󰂃 Battery Low!"
+			notify-send.sh -u critical "󰂃 Battery Low!" --replace=98
 		fi
 	fi
 	if [ $charge -gt 80 ];then
 		if [ "$status" == "on" ];then
-			notify-send "󰂃 Battery Charged!"
+			notify-send.sh "󰂃 Battery Charged!" --replace=99
 		fi
 	fi
-    echo $symbol " $charge%"
+    echo -e "\x01$symbol  $charge%"
     
 else
     echo 100%
 fi
+
+case $BUTTON in
+		  4) brightnessctl set 5%- &&
+			 /home/rohit/.config/xob/scripts/brightness.sh;;
+		  5) brightnessctl set 5%+ &&
+			 /home/rohit/.config/xob/scripts/brightness.sh;;
+esac
+

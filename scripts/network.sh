@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -f "/sys/class/net/wlp3s0/carrier" ]; then
+if [ "$(cat /sys/class/net/wlp3s0/carrier)" == "1" ]; then
     network="$(nmcli -t -f active,ssid, dev wifi | egrep '^yes' | cut -d\' -f2 | cut -d ':' -f2)"
     if [ "$network" == "" ]; then
     	echo " 󰤭 "
@@ -18,10 +18,13 @@ if [ -f "/sys/class/net/wlp3s0/carrier" ]; then
  	    elif [ $strength -lt -60 ]; then
  	    	symbol="󰤥"
  	    fi  	
-    	echo " $symbol  " $network
+		echo -e " $symbol   $network"
+		# echo -e "$network"
     fi
-elif [ -f "/sys/class/net/enp2s0/carrier" ]; then
-    echo " 󰣸"
+elif [ "$(cat /sys/class/net/enp2s0/carrier)" == "1" ]; then
+    echo " 󰣸   Wired"
+elif [ "$(cat /sys/class/net/enp0s20f0u4/carrier)" == "1" ]; then
+    echo " 󰣸   Wired2"
 else
-    echo " 󰤮 "
+    echo " 󰤮   ?"
 fi

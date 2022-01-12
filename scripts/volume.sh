@@ -1,9 +1,9 @@
 #!/bin/sh
-#󰍬󰍭󰍯  󰕾 󰕿 󰖀 󰖁 
+#󰍬󰍭󰍯  󰕾 󰕿 󰖀 󰖁 󰋎
 
 mic="󰍬"
 micmute=$(pactl list sources | grep Mute | tail -n 1 | awk -F ":" '{print $2}'| xargs)
-micinuse=$(lsof /dev/snd/* | grep pcmC1D0c)
+micinuse=$(lsof /dev/snd/* | grep -e "pcm.*c")
 
 if [ "$micmute" = "yes" ]; then
 	mic="󰍭"
@@ -19,12 +19,19 @@ if [ "$SINK" = "" ]; then
 fi
 NOW=$( pactl list sinks | grep '^[[:space:]]Volume:' | head -n $SINK | tail -n 1 | sed -e 's,.* \([0-9][0-9]*\)%.*,\1,' )
 MUTE=$(pactl list sinks | grep '^[[:space:]]Mute:'| head -n $SINK | tail -n 1 | awk -F ":" '{print $2}'| xargs)
+PORT=$(pactl list sinks | grep 'Active Port' | awk '{print $3}')
+
+hp=""
+
+if [ "$PORT" = "analog-output-headphones" ]; then
+	hp="   •   󰋎"
+fi
 
 if [ "$MUTE" = "yes" ]; then
 	if [ "$mic" == "" ]; then
- 		echo "󰖁"
+ 		echo "󰖁$hp"
  	else
- 		echo "󰖁   •  $mic"
+ 		echo "󰖁$hp   •   $mic"
  	fi
 else
 	symbol="󰕾"
@@ -34,12 +41,18 @@ else
 		symbol="󰖀"
 	fi
 	if [ "$mic" == "" ]; then
-		echo "$symbol   $NOW%"
+		echo "$symbol   $NOW%$hp"
 	else
- 		echo "$symbol   $NOW%" " •  $mic"
+ 		echo "$symbol   $NOW%" "$hp   •   $mic"
  	fi
 fi
 
-case $BLOCK_BUTTON in
-          1) setsid -f st -c stpulse -n stpulse -e ncpamixer ;;
+
+# notify-send.sh "$symbol  " -t 2000 -h int:value:"$NOW" --replace=555
+
+case $BUTTON in
+		  1) pactl set-sink-mute @DEFAULT_SINK@ toggle ;;
+		  3) pavucontrol & ;;
+		  4) pactl set-sink-volume @DEFAULT_SINK@ -2% ;;
+		  5) pactl set-sink-volume @DEFAULT_SINK@ +2% ;;
 esac
